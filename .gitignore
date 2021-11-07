@@ -1,0 +1,2 @@
+deployment/*
+!deployment/local_giver.abi.json
