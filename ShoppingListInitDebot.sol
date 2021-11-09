@@ -30,7 +30,7 @@ abstract contract ShoppingListInitDebot is Debot {
     PurchasesSummary m_summary;      // статистика покупок
 
     // деботы-потомки должны будут реализовать меню
-    function shoppingListManipulationMenu() internal virtual {}
+    function listActionsMenu() internal virtual {}
 
     // формируем состояние из кода и данных контракта ShoppingList
     function setShoppingListCode(TvmCell code, TvmCell data) public {
@@ -154,8 +154,8 @@ abstract contract ShoppingListInitDebot is Debot {
     }
 
     function setSummary(PurchasesSummary summary) public {
-        m_summary = summary;            // устанавливаем сводку о покупках в деботе
-        shoppingListManipulationMenu(); // показываем меню
+        m_summary = summary;  // устанавливаем сводку о покупках в деботе
+        listActionsMenu();    // показываем меню
     }
 
     function getDebotInfo() public functionID(0xDEB) override view returns(

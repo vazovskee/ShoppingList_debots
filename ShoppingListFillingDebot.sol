@@ -13,12 +13,12 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
     string private productTitle;
     uint32 private productsCount;
 
-    function shoppingListManipulationMenu() internal override {
+    function listActionsMenu() internal override {
         string sep = '----------------------------------------';
         string menuIntro;
         uint32 totalCount = m_summary.unpaidCount + m_summary.paidCount;
         if (m_summary.unpaidCount + m_summary.paidCount == 0) {
-            menuIntro = "You have no purchases yet";
+            menuIntro = "Your shopping list is empty";
         } else {
             menuIntro = format("You have {} purchases", totalCount);
             if (m_summary.unpaidCount != 0) {
@@ -34,8 +34,9 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
             sep,
             // показываем опции для дальнейшего взаимодействия с деботом
             [
+                MenuItem("Show purchases","",tvm.functionId(showPurchases)),
                 MenuItem("Add new purchase","",tvm.functionId(addPurchase)),
-                MenuItem("Show purchases","",tvm.functionId(showPurchases))
+                MenuItem("Delete purchase","",tvm.functionId(showPurchases))
             ]
         );
     }
@@ -66,32 +67,30 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
                     confirmedMark = "🛒";
                     priceInfo = format(" with total price {} cr. ", purchase.price);
                 } else {
-                    confirmedMark = "";
+                    confirmedMark = " ";
                     priceInfo = "";
                 }
-                Terminal.print(0, format("{}){} {} units of {}{} | added at {} |",
+                Terminal.print(0, format("[{}]{} {} units of {}{} | added at {} |",
                     purchase.id, confirmedMark, purchase.quantity, purchase.title, priceInfo, purchase.createdAt));
             }
-        } else {
-            Terminal.print(0, "Your shopping list is empty");
         }
-        shoppingListManipulationMenu();
+        listActionsMenu();
     }
 
     function addPurchase(uint32 index) public {
         index = index; // index of selected menu option
-        Terminal.input(tvm.functionId(addPurchase_), "Product name:", false);
+        Terminal.input(tvm.functionId(addPurchase_), "Enter product name:", false);
     }
 
     function addPurchase_(string value) public {
         productTitle = value;
-        Terminal.input(tvm.functionId(addPurchase__), "Products' quantity:", false);
+        Terminal.input(tvm.functionId(addPurchase__), "Enter the number of products:", false);
     }
 
     function addPurchase__(string value) public {
         (uint num,) = stoi(value);
         productsCount = uint32(num);
-        optional(uint256) none = 0;
+        optional(uint) none;
         IShoppingList(m_shoppingListAddress).addPurchase{ // вызываем метод addPurchase у контракта ShoppingList
                 abiVer: 2,
                 extMsg: true,
@@ -100,12 +99,37 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
                 time: uint64(now),
                 expire: 0,
                 callbackId: tvm.functionId(onSuccess),
-                onErrorId: tvm.functionId(onErrorListInteraction)
+                onErrorId: tvm.functionId(onErrorListAction)
             }(productTitle, productsCount);
     }
-    
-    function onErrorListInteraction(uint32 sdkError, uint32 exitCode) public {
+
+    function deletePurchase(uint32 index) public {
+        index = index;
+        if (m_summary.unpaidCount + m_summary.paidCount > 0) {
+            Terminal.input(tvm.functionId(deletePurchase_), "Enter product's id:", false);
+        } else {
+            Terminal.print(0, "There are no products to remove in the list yet");
+            listActionsMenu();
+        }
+    }
+
+    function deletePurchase_(string value) public view {
+        (uint id,) = stoi(value);
+        optional(uint) none;
+        IShoppingList(m_shoppingListAddress).deletePurchase{
+                abiVer: 2,
+                extMsg: true,
+                sign: true,
+                pubkey: none,
+                time: uint64(now),
+                expire: 0,
+                callbackId: tvm.functionId(onSuccess),
+                onErrorId: tvm.functionId(onErrorListAction)
+            }(uint32(id));
+    }
+
+    function onErrorListAction(uint32 sdkError, uint32 exitCode) public {
         Terminal.print(0, format("Operation failed. sdkError {}, exitCode {}", sdkError, exitCode));
-        shoppingListManipulationMenu();
+        listActionsMenu();
     }
 }
