@@ -8,9 +8,9 @@ import "./base/tonlabs/Menu.sol";
 
 import "./ShoppingListInteractionDebot.sol";
 
-contract ShoppingListFillingDebot is ShoppingListInteractionDebot {
+contract ShoppingListPurchasingDebot is ShoppingListInteractionDebot {
 
-    string private m_productTitle;
+    uint32 private m_productId;
 
     function listActionsMenu() internal override {
         string sep = '----------------------------------------';
@@ -21,29 +21,35 @@ contract ShoppingListFillingDebot is ShoppingListInteractionDebot {
             // показываем опции для дальнейшего взаимодействия с деботом
             [
                 MenuItem("Show purchases", "", tvm.functionId(showPurchases)),
-                MenuItem("Add new purchase", "", tvm.functionId(addPurchase)),
+                MenuItem("Confirm purchase", "", tvm.functionId(confirmPurchase)),
                 MenuItem("Delete purchase", "", tvm.functionId(deletePurchase))
             ]
         );
     }
 
-    function addPurchase(uint32 index) public {
-        index = index; // index of selected menu option
-        Terminal.input(tvm.functionId(addPurchase_), "Enter product name:", false);
+    function confirmPurchase(uint32 index) public {
+        index = index;
+        if (m_summary.unpaidCount + m_summary.paidCount > 0) {
+            Terminal.input(tvm.functionId(confirmPurchase_), "Enter purchase id:", false);
+        } else {
+            Terminal.print(0, "There are no purchases to confirm in the list yet");
+            listActionsMenu();
+        }
     }
 
-    function addPurchase_(string value) public {
-        m_productTitle = value;
-        Terminal.input(tvm.functionId(addPurchase__), "Enter the number of products:", false);
+    function confirmPurchase_(string value) public {
+        (uint id,) = stoi(value);
+        m_productId = uint32(id);
+        Terminal.input(tvm.functionId(confirmPurchase__), "Enter the total price of products in the selected purchase:", false);
     }
 
-    function addPurchase__(string value) public {
+    function confirmPurchase__(string value) public {
         optional(uint) none;
 
-        (uint amount,) = stoi(value);
-        uint32 productsAmount = uint32(amount);
+        (uint price,) = stoi(value);
+        uint32 productsPrice = uint32(price);
 
-        IShoppingList(m_shoppingListAddress).addPurchase{
+        IShoppingList(m_shoppingListAddress).confirmPurchase{
                 abiVer: 2,
                 extMsg: true,
                 sign: true,
@@ -52,6 +58,6 @@ contract ShoppingListFillingDebot is ShoppingListInteractionDebot {
                 expire: 0,
                 callbackId: tvm.functionId(onSuccess),
                 onErrorId: tvm.functionId(onErrorListAction)
-            }(m_productTitle, productsAmount);
+            }(m_productId, productsPrice);
     }
 }

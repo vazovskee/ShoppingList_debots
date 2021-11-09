@@ -24,22 +24,25 @@ contract ShoppingList is IShoppingList {
         require(msg.pubkey() == m_ownerPubkey, 101);
         _;
     }
-
+    
+    modifier checkPurchaseExistence(uint32 purchaseId) {
+        require(m_purchases.exists(purchaseId), 201, "Purchase with this id doesn't exist");
+        _;
+    }
+    
     function addPurchase(string title, uint32 quantity) public override onlyOwner {
         tvm.accept();
         m_lastId++;
         m_purchases[m_lastId] = Purchase(m_lastId, title, quantity, 0, false, now);
     }
 
-    function deletePurchase(uint32 id) public override onlyOwner {
-        require(m_purchases.exists(id), 102);
+    function deletePurchase(uint32 id) public override onlyOwner checkPurchaseExistence(id) {
         tvm.accept();
         delete m_purchases[id];
     }
 
-    function confirmPurchase(uint32 id, uint32 _price) external override onlyOwner {
-        require(m_purchases.exists(id), 102);
-        require(!m_purchases[id].isConfirmed, 103);
+    function confirmPurchase(uint32 id, uint32 _price) external override onlyOwner checkPurchaseExistence(id) {
+        require(!m_purchases[id].isConfirmed, 202, "This purchase already confirmed");
         tvm.accept();
         m_purchases[id].price = _price;
         m_purchases[id].isConfirmed = true;
