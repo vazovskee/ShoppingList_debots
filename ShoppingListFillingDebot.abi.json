@@ -3,6 +3,22 @@
 	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
+			"name": "showPurchases",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "showPurchases_",
+			"inputs": [
+				{"components":[{"name":"id","type":"uint32"},{"name":"title","type":"bytes"},{"name":"quantity","type":"uint32"},{"name":"price","type":"uint32"},{"name":"isConfirmed","type":"bool"},{"name":"createdAt","type":"uint64"}],"name":"purchases","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "addPurchase",
 			"inputs": [
 				{"name":"index","type":"uint32"}

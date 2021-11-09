@@ -26,9 +26,43 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
             sep,
             // показываем опции для дальнейшего взаимодействия с деботом
             [
-                MenuItem("Add new purchase","",tvm.functionId(addPurchase))
+                MenuItem("Add new purchase","",tvm.functionId(addPurchase)),
+                MenuItem("Show purchases","",tvm.functionId(showPurchases))
             ]
         );
+    }
+
+    function showPurchases(uint32 index) public view {
+        index = index;
+        optional(uint256) none;
+        IShoppingList(m_shoppingListAddress).getPurchases{
+            abiVer: 2,
+            extMsg: true,
+            sign: false,
+            pubkey: none,
+            time: uint64(now),
+            expire: 0,
+            callbackId: tvm.functionId(showPurchases_),
+            onErrorId: 0
+        }();
+    }
+
+    function showPurchases_(Purchase[] purchases) public {
+        uint32 i;
+        if (purchases.length > 0 ) {
+            Terminal.print(0, "Your purchases list:");
+            for (i = 0; i < purchases.length; i++) {
+                Purchase purchase = purchases[i];
+                string confirmed;
+                if (purchase.isConfirmed) {
+                    confirmed = "(bought)";
+                }
+                Terminal.print(0, format("{}) {} of {} with price: {} cr. was added at {}", purchase.id, purchase.quantity, purchase.title, purchase.price, purchase.createdAt));
+            }
+        } else {
+            Terminal.print(0, "Your purchases list is empty");
+        }
+        shoppingListManipulationMenu();
     }
 
     function addPurchase(uint32 index) public {
