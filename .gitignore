@@ -1,4 +1,4 @@
+#tonos-cli.conf.json
 debot_err.log
-tonos-cli.conf.json
 deployment/*
 !deployment/local_giver.abi.json

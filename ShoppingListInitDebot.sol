@@ -93,7 +93,7 @@ abstract contract ShoppingListInitDebot is Debot {
             time: uint64(now),
             expire: 0,
             callbackId: tvm.functionId(waitBeforeDeploy),    // вызываем функцию, ожидающую деплоя
-            onErrorId: tvm.functionId(onErrory)
+            onErrorId: tvm.functionId(onError)
         }(m_shoppingListAddress, INITIAL_BALANCE, false, 3, empty);  // перевод суммы INITIAL_BALANCE на адрес m_shoppingListAddress
     }
 
@@ -118,7 +118,7 @@ abstract contract ShoppingListInitDebot is Debot {
             abiVer: 2,
             dest: m_shoppingListAddress,
             callbackId: tvm.functionId(onSuccess), // если деплой прошёл успешно
-            onErrorId:  tvm.functionId(onErrory),
+            onErrorId:  tvm.functionId(onError),
             time: 0,
             expire: 0,
             sign: true,
@@ -129,14 +129,13 @@ abstract contract ShoppingListInitDebot is Debot {
         tvm.sendrawmsg(deployMsg, 1);
     }
 
-    // в случае успешного деплоя получаем и запоминаем сводку о покупках
+    // в случае успешного выполнения операции получаем и запоминаем сводку о покупках
     function onSuccess() public view {
         _getSummary(tvm.functionId(setSummary));
     }
 
-    function onErrory(uint32 sdkError, uint32 exitCode) public {
-        sdkError;
-        exitCode;
+    function onError(uint32 sdkError, uint32 exitCode) public {
+        Terminal.print(0, format("ERROR: sdkError {}, exitCode {}", sdkError, exitCode));
     }
 
     // получаем сводку о покупках у контракта ShoppingList
@@ -164,15 +163,10 @@ abstract contract ShoppingListInitDebot is Debot {
         address support, string hello, string language, string dabi, bytes icon
     ) {
         name = "Shopping List DeBot";
-        version = "0.0.1";
-        publisher = "";
-        key = "Shopping List manager";
-        author = "Miftakhov";
-        support = address.makeAddrStd(0, 0);
+        author = "vazovskee";
         hello = "It's a Shopping List DeBot.";
         language = "en";
         dabi = m_debotAbi.get();
-        icon = m_icon;
     }
 
     function getRequiredInterfaces() public view override returns (uint256[] interfaces) {
