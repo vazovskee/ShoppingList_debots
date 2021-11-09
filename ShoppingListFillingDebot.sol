@@ -1,5 +1,5 @@
 
-pragma ton-solidity >= 0.35.0;
+pragma ton-solidity >=0.35.0;
 pragma AbiHeader expire;
 pragma AbiHeader time;
 pragma AbiHeader pubkey;
@@ -10,7 +10,10 @@ import "./ShoppingListInitDebot.sol";
 
 contract ShoppingListFillingDebot is ShoppingListInitDebot {
 
-    function actionMenu() internal override {
+    string private productTitle;
+    uint32 private productsCount;
+
+    function shoppingListManipulationMenu() internal override {
         string sep = '----------------------------------------';
         Menu.select(
             format(
@@ -21,7 +24,7 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
                     m_summary.totalPayment
             ),
             sep,
-            // показываем кнопки для дальнейшего взаимодействия с деботом
+            // показываем опции для дальнейшего взаимодействия с деботом
             [
                 MenuItem("Add new purchase","",tvm.functionId(addPurchase))
             ]
@@ -30,10 +33,17 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
 
     function addPurchase(uint32 index) public {
         index = index; // index of selected menu option
-        Terminal.input(tvm.functionId(addPurchase_), "One line please:", true);
+        Terminal.input(tvm.functionId(addPurchase_), "Product name:", false);
     }
 
-    function addPurchase_(string title) public view {
+    function addPurchase_(string value) public {
+        productTitle = value;
+        Terminal.input(tvm.functionId(addPurchase__), "Number of products:", false);
+    }
+
+    function addPurchase__(string value) public {
+        (uint num,) = stoi(value);
+        productsCount = uint32(num);
         optional(uint256) none = 0;
         IShoppingList(m_shoppingListAddress).addPurchase{ // вызываем метод addPurchase у контракта ShoppingList
                 abiVer: 2,
@@ -44,15 +54,11 @@ contract ShoppingListFillingDebot is ShoppingListInitDebot {
                 expire: 0,
                 callbackId: tvm.functionId(onSuccess), // удачно создано
                 onErrorId: tvm.functionId(onErrorListInteraction)
-            }(title, 42);
+            }(productTitle, productsCount);
     }
     
     function onErrorListInteraction(uint32 sdkError, uint32 exitCode) public {
         Terminal.print(0, format("Operation failed. sdkError {}, exitCode {}", sdkError, exitCode));
-        actionMenu();
-    }
-
-    function getRequiredInterfaces() public view override returns (uint256[] interfaces) {
-        return [ Terminal.ID, AddressInput.ID, ConfirmInput.ID, Menu.ID ];
+        shoppingListManipulationMenu();
     }
 }

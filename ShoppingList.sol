@@ -1,5 +1,5 @@
 
-pragma ton-solidity >= 0.35.0;
+pragma ton-solidity >=0.35.0;
 pragma AbiHeader expire;
 
 import "./base/IShoppingList.sol";
@@ -64,7 +64,7 @@ contract ShoppingList is IShoppingList {
         uint32 totalPayment;
 
         for((, Purchase purchase) : m_purchases) {
-            if  (purchase.isConfirmed) {
+            if (purchase.isConfirmed) {
                 paidCount ++;
                 totalPayment += purchase.price;
             } else {

@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-DEBOT_NAME=${1%.*} # filename without extension
+DEPLOYMENT_DIR=./deployment
+CONTRACT_NAME=ShoppingList
+DEBOT_NAME=${1%.*}
 NETWORK="${2:-http://127.0.0.1}"
 
 #
@@ -26,22 +28,22 @@ fi
 
 function giver {
     $tos --url $NETWORK call \
-        --abi ./deployment/local_giver.abi.json \
-        $GIVER_ADDRESS \
-        sendGrams "{\"dest\":\"$1\",\"amount\":$CRYSTALS_AMOUNT}" \
-        1>/dev/null
+         --abi $DEPLOYMENT_DIR/local_giver.abi.json \
+         $GIVER_ADDRESS \
+         sendGrams "{\"dest\":\"$1\",\"amount\":$CRYSTALS_AMOUNT}" \
+         1>/dev/null
 }
 
 function get_address {
-    echo $(cat ./deployment/$1.log | grep "Raw address:" | cut -d ' ' -f 3)
+    echo $(cat $DEPLOYMENT_DIR/$1.log | grep "Raw address:" | cut -d ' ' -f 3)
 }
 
 function genaddr {
-    $tos genaddr $1.tvc $1.abi.json --genkey ./deployment/$1.keys.json > ./deployment/$1.log
+    $tos genaddr $1.tvc $1.abi.json --genkey $DEPLOYMENT_DIR/$1.keys.json > $DEPLOYMENT_DIR/$1.log
 }
 
 function decode {
-    $tos decode stateinit $1.tvc --tvc | tail -n +5 > ./deployment/$1.decode.json 2>&1
+    $tos decode stateinit $1.tvc --tvc | tail -n +5 > $DEPLOYMENT_DIR/$1.decode.json 2>&1
 }
 
 echo "Step 1. Calculating debot address"
@@ -53,27 +55,28 @@ giver $DEBOT_ADDRESS
 
 echo "Step 3. Deploying contract"
 $tos --url $NETWORK deploy $DEBOT_NAME.tvc "{}" \
-    --sign ./deployment/$DEBOT_NAME.keys.json \
-    --abi $DEBOT_NAME.abi.json 1>/dev/null
+     --sign $DEPLOYMENT_DIR/$DEBOT_NAME.keys.json \
+     --abi $DEBOT_NAME.abi.json 1>/dev/null
 
 DEBOT_ABI=$(cat $DEBOT_NAME.abi.json | xxd -ps -c 20000)
 
 $tos --url $NETWORK call $DEBOT_ADDRESS setABI "{\"dabi\":\"$DEBOT_ABI\"}" \
-    --sign ./deployment/$DEBOT_NAME.keys.json \
-    --abi $DEBOT_NAME.abi.json 1>/dev/null
-
+     --sign $DEPLOYMENT_DIR/$DEBOT_NAME.keys.json \
+     --abi $DEBOT_NAME.abi.json \
+     1>/dev/null
 
 echo "Step 4. Getting debot info"
 $tos --url $NETWORK run \
      --abi $DEBOT_NAME.abi.json \
-     $DEBOT_ADDRESS getDebotInfo "{}"  > ./deployment/$DEBOT_NAME.info.json
+     $DEBOT_ADDRESS getDebotInfo "{}" > $DEPLOYMENT_DIR/$DEBOT_NAME.info.json
 
 echo "Step 5. Setting contract code to debot"
 
 decode ShoppingList
 
 $tos --url $NETWORK call --abi $DEBOT_NAME.abi.json \
-     --sign ./deployment/$DEBOT_NAME.keys.json \
-     $DEBOT_ADDRESS setShoppingListCode ./deployment/ShoppingList.decode.json 1>/dev/null
+     --sign $DEPLOYMENT_DIR/$DEBOT_NAME.keys.json \
+     $DEBOT_ADDRESS setShoppingListCode $DEPLOYMENT_DIR/ShoppingList.decode.json \
+     1>/dev/null
 
 echo "Done! Deployed debot with address: $DEBOT_ADDRESS"

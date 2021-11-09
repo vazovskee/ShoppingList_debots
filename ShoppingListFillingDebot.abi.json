@@ -13,7 +13,15 @@
 		{
 			"name": "addPurchase_",
 			"inputs": [
-				{"name":"title","type":"bytes"}
+				{"name":"value","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "addPurchase__",
+			"inputs": [
+				{"name":"value","type":"bytes"}
 			],
 			"outputs": [
 			]
@@ -25,14 +33,6 @@
 				{"name":"exitCode","type":"uint32"}
 			],
 			"outputs": [
-			]
-		},
-		{
-			"name": "getRequiredInterfaces",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"interfaces","type":"uint256[]"}
 			]
 		},
 		{
@@ -70,7 +70,7 @@
 		{
 			"name": "creditAccount",
 			"inputs": [
-				{"name":"walletAddress","type":"address"}
+				{"name":"value","type":"address"}
 			],
 			"outputs": [
 			]
@@ -98,7 +98,7 @@
 			]
 		},
 		{
-			"name": "onErrorRepeatDeploy",
+			"name": "onErrory",
 			"inputs": [
 				{"name":"sdkError","type":"uint32"},
 				{"name":"exitCode","type":"uint32"}
@@ -107,18 +107,9 @@
 			]
 		},
 		{
-			"name": "onErrorRepeatCredit",
+			"name": "setSummary",
 			"inputs": [
-				{"name":"sdkError","type":"uint32"},
-				{"name":"exitCode","type":"uint32"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "setStat",
-			"inputs": [
-				{"components":[{"name":"unpaidCount","type":"uint32"},{"name":"paidCount","type":"uint32"},{"name":"totalPayment","type":"uint32"}],"name":"stat","type":"tuple"}
+				{"components":[{"name":"unpaidCount","type":"uint32"},{"name":"paidCount","type":"uint32"},{"name":"totalPayment","type":"uint32"}],"name":"summary","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -139,6 +130,14 @@
 				{"name":"language","type":"bytes"},
 				{"name":"dabi","type":"bytes"},
 				{"name":"icon","type":"bytes"}
+			]
+		},
+		{
+			"name": "getRequiredInterfaces",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"interfaces","type":"uint256[]"}
 			]
 		},
 		{
